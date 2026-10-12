@@ -17,8 +17,8 @@ First public release.
     `findBySelect()` and `count()`. They return hydrated entities.
   - Writes: `addNew()`, `save()` and `remove()`.
   - Raw rows: `fetchOneRow()` and `fetchAllRows()`.
-  - Table-scoped query builders: `newSelect()`, `newInsert()`, `newUpdate()` and
-    `newDelete()`.
+  - Table-scoped aura/sqlquery builders: `newSelect()`, `newInsert()`, `newUpdate()` and
+    `newDelete()`. Run write builders with `execute()`, which returns the affected row count.
 - Finder criteria accept property or column names, `null` (`IS NULL`) and arrays (`IN`).
   Identifiers are validated and quoted, and values are always bound.
 - `TypeRegistry` with built-in `string`, `int`, `float`, `bool`, `datetime`, `object` and

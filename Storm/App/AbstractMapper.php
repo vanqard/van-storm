@@ -352,6 +352,16 @@ abstract class AbstractMapper
         return $this->getConnection()->fetchAll($select->getStatement(), $select->getBindValues());
     }
 
+    /**
+     * Runs an insert, update or delete built with newInsert()/newUpdate()/newDelete()
+     * and returns the number of affected rows. Bound values are passed through
+     * as-is: Storm's typecasts are not applied.
+     */
+    public function execute(InsertInterface|UpdateInterface|DeleteInterface $query): int
+    {
+        return $this->getConnection()->fetchAffected($query->getStatement(), $query->getBindValues());
+    }
+
     // ------------------------------------------------------------------
     // Writes
     // ------------------------------------------------------------------
@@ -429,7 +439,7 @@ abstract class AbstractMapper
         $delete = $this->newDelete();
         $this->applyCriteria($delete, $this->primaryKeyCriteria($entity));
 
-        return $this->getConnection()->fetchAffected($delete->getStatement(), $delete->getBindValues()) > 0;
+        return $this->execute($delete) > 0;
     }
 
     // ------------------------------------------------------------------

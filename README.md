@@ -4,8 +4,8 @@
 [![Latest version](https://img.shields.io/packagist/v/vanqard/van-storm.svg)](https://packagist.org/packages/vanqard/van-storm)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A small data-mapper ORM for PHP 8.4+, built on [aura/sql](https://github.com/auraphp/Aura.Sql)
-and [aura/sqlquery](https://github.com/auraphp/Aura.SqlQuery).
+A small data-mapper ORM for PHP 8.4+, built around the awesome [aura/sql](https://github.com/auraphp/Aura.Sql)
+and [aura/sqlquery](https://github.com/auraphp/Aura.SqlQuery) packages.
 
 - **Attribute-driven mapping.** Use `#[Entity]` and `#[Column]` on plain PHP classes, or let
   Storm map them by naming convention.
@@ -91,6 +91,7 @@ See [Types](Docs/types.md#the-class-allow-list) for details.
 - [Getting started](Docs/getting-started.md)
 - [Entities](Docs/entities.md)
 - [Mappers](Docs/mappers.md)
+- [Query builder](Docs/query-builder.md)
 - [Types and custom types](Docs/types.md)
 - [Exceptions](Docs/exceptions.md)
 

@@ -37,6 +37,7 @@ Criteria rules:
 | `addNew(Entity $e): Entity` | Inserts the entity. If the auto-increment key is empty, the database generates it and Storm writes it back to the entity. |
 | `save(Entity $e): Entity` | Updates every mapped non-key column, matching on the primary key. Throws `InvalidPrimaryKeyDeclarationException` if the key isn't set. |
 | `remove(Entity $e): bool` | Deletes by primary key. Returns `true` if a row was deleted. |
+| `execute(InsertInterface\|UpdateInterface\|DeleteInterface $q): int` | Runs a hand-built write query and returns the number of affected rows. See [Query builder](query-builder.md#inserts-updates-and-deletes). |
 
 ## Custom mappers
 
@@ -69,14 +70,11 @@ so **a mapper must be constructable without arguments**. The locator raises
 
 ## Query builders and raw rows
 
-`newSelect()`, `newInsert()`, `newUpdate()` and `newDelete()` return aura/sqlquery builders
-that are already scoped to the mapper's table, in the connection's dialect. For results that
-aren't entities:
-
-- `fetchOneRow(SelectInterface $select): ?array`
-- `fetchAllRows(SelectInterface $select): list<array>`
-
-With hand-written SQL you're responsible for quoting identifiers. Always bind values.
+For queries the finder methods can't express, `newSelect()`, `newInsert()`, `newUpdate()`
+and `newDelete()` return aura/sqlquery builders scoped to the mapper's table. Run them with
+`findBySelect()`, `fetchAllRows()`, `fetchOneRow()` or `execute()`. The
+[Query builder](query-builder.md) page covers this in full, including joins, paging,
+aggregates, transactions, and the safety rules that differ from the finder methods.
 
 ## Hydration helpers
 
