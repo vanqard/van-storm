@@ -1,0 +1,64 @@
+{
+  "name": "vanqard/van-storm",
+  "description": "Small, attribute-driven data-mapper ORM for PHP 8.4+, built on aura/sql and aura/sqlquery",
+  "type": "library",
+  "keywords": [
+    "ORM",
+    "datamapper",
+    "data-mapper",
+    "aura",
+    "pdo",
+    "database"
+  ],
+  "homepage": "https://github.com/vanqard/van-storm",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Thunder Raven-Stoker",
+      "email": "thunder@vanqard.com",
+      "homepage": "http://phpbrilliance.com/book#author"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/vanqard/van-storm/issues",
+    "source": "https://github.com/vanqard/van-storm",
+    "docs": "https://github.com/vanqard/van-storm/tree/develop/Docs"
+  },
+  "require": {
+    "php": "^8.4",
+    "ext-pdo": "*",
+    "aura/sql": "^6.0",
+    "aura/sqlquery": "^3.0",
+    "zumba/json-serializer": "^3.2.3"
+  },
+  "require-dev": {
+    "ext-pdo_sqlite": "*",
+    "friendsofphp/php-cs-fixer": "^3.64",
+    "phpstan/phpstan": "^2.0",
+    "phpunit/phpunit": "^11.5",
+    "roave/security-advisories": "dev-latest"
+  },
+  "autoload": {
+    "psr-4": {
+      "Vanqard\\Storm\\": "Storm"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Vanqard\\Test\\": "Test"
+    }
+  },
+  "bin": [
+    "Scripts/storm-allowlist"
+  ],
+  "scripts": {
+    "test": "phpunit",
+    "analyse": "phpstan analyse --memory-limit=512M",
+    "cs": "php-cs-fixer fix --dry-run --diff",
+    "cs-fix": "php-cs-fixer fix"
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "stable"
+}

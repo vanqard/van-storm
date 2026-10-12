@@ -1,0 +1,134 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * storm-allowlist: scan PHP sources for concrete classes and write them as a
+ * require-able allow-list for Storm's object deserialization.
+ *
+ * Usage: storm-allowlist --output=<file.php> [--exclude=<dir>]... [--include=<FQCN>]... [--dry-run] <path>...
+ */
+
+use Vanqard\Storm\Tools\AllowListWriter;
+use Vanqard\Storm\Tools\ClassScanner;
+
+$autoloaders = [
+    $GLOBALS['_composer_autoload_path'] ?? null,  // Composer >= 2.2 bin proxy
+    __DIR__ . '/../vendor/autoload.php',          // running from a checkout
+    __DIR__ . '/../../../autoload.php',           // installed as vendor/vanqard/van-storm
+];
+
+$autoloaded = false;
+foreach ($autoloaders as $autoloader) {
+    if (is_string($autoloader) && is_file($autoloader)) {
+        require $autoloader;
+        $autoloaded = true;
+        break;
+    }
+}
+
+if (!$autoloaded) {
+    fwrite(STDERR, "storm-allowlist: unable to find Composer's autoload.php\n");
+    exit(1);
+}
+
+$usage = <<<'TXT'
+Usage: storm-allowlist --output=<file.php> [options] <path>...
+
+Recursively scans <path>... for concrete PHP classes and enums and writes them
+to <file.php> as an allow-list for Storm's `object` column deserialization:
+
+    $storm = new MapperLocator($pdo, allowedClasses: 'path/to/<file.php>');
+
+Options:
+  --output=<file.php>   File to write (its directory must exist). Required unless --dry-run.
+  --exclude=<dir>       Skip directories with this name or path. Repeatable.
+  --include=<FQCN>      Also allow this class, e.g. DateTimeImmutable. Repeatable.
+  --dry-run             Print the generated file instead of writing it.
+  --help                Show this help.
+
+Exit codes: 0 success, 1 usage or I/O error, 2 written but some files could not be parsed.
+
+TXT;
+
+/**
+ * @return list<string>
+ */
+$asList = static function (mixed $value): array {
+    if ($value === null || $value === false) {
+        return [];
+    }
+
+    return array_values(array_map('strval', (array) $value));
+};
+
+$arguments = $_SERVER['argv'] ?? [];
+$arguments = is_array($arguments) ? array_values(array_map('strval', $arguments)) : [];
+
+$options = getopt('', ['output:', 'exclude:', 'include:', 'dry-run', 'help'], $restIndex);
+if ($options === false) {
+    fwrite(STDERR, $usage);
+    exit(1);
+}
+
+if (array_key_exists('help', $options)) {
+    fwrite(STDOUT, $usage);
+    exit(0);
+}
+
+$paths = array_slice($arguments, $restIndex);
+
+$output = isset($options['output']) ? (string) (is_array($options['output']) ? end($options['output']) : $options['output']) : null;
+$dryRun = isset($options['dry-run']);
+
+if ($paths === [] || ($output === null && !$dryRun)) {
+    fwrite(STDERR, $usage);
+    exit(1);
+}
+
+$includes = [];
+foreach ($asList($options['include'] ?? null) as $include) {
+    $include = ltrim($include, '\\');
+    if (preg_match('/^[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*(\\\\[A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*)*$/', $include) !== 1) {
+        fwrite(STDERR, sprintf("storm-allowlist: '%s' is not a valid class name\n", $include));
+        exit(1);
+    }
+    $includes[] = $include;
+}
+
+try {
+    $result = (new ClassScanner())->scan($paths, $asList($options['exclude'] ?? null));
+} catch (\Throwable $e) {
+    fwrite(STDERR, 'storm-allowlist: ' . $e->getMessage() . "\n");
+    exit(1);
+}
+
+foreach ($result->errors as $file => $error) {
+    fwrite(STDERR, sprintf("storm-allowlist: skipped %s: %s\n", $file, $error));
+}
+
+$classes = array_values(array_unique([...$result->classes, ...$includes]));
+$writer = new AllowListWriter();
+
+if ($dryRun) {
+    fwrite(STDOUT, $writer->render($classes, $paths));
+} else {
+    try {
+        $writer->write((string) $output, $classes, $paths);
+    } catch (\Throwable $e) {
+        fwrite(STDERR, 'storm-allowlist: ' . $e->getMessage() . "\n");
+        exit(1);
+    }
+
+    fwrite(STDOUT, sprintf(
+        "Wrote %d class%s from %d file%s to %s\n",
+        count($classes),
+        count($classes) === 1 ? '' : 'es',
+        $result->filesScanned,
+        $result->filesScanned === 1 ? '' : 's',
+        $output
+    ));
+}
+
+exit($result->errors === [] ? 0 : 2);
